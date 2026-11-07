@@ -1,0 +1,184 @@
+# ======================================================================================================================
+#  SwiftRTP world-selector menu (/rtp gui)
+#
+#  Text uses MiniMessage: https://docs.advntr.dev/minimessage/format
+#  Item names and lore are NOT italic unless you add <italic> yourself.
+#  Missing keys are filled in from the built-in defaults (and added to this file on load), except inside the
+#  "items" and "buttons" maps: those are yours — delete an entry and it is gone.
+#  Apply changes with /rtp admin reload (open menus are closed so the new layout is used).
+# ======================================================================================================================
+
+# Master switch. When false, /rtp gui replies with command.gui-disabled from messages.yml.
+enabled: true
+
+# When true, a bare "/rtp" (no arguments) opens this menu instead of teleporting right away.
+open-on-bare-command: false
+
+# Inventory title. Placeholders: <player>
+title: "<gradient:#38bdf8:#6366f1><bold>Random Teleport</bold></gradient>"
+
+# Number of chest rows, 1-6 (9 slots each).
+rows: 3
+
+# How often the open menu re-renders its items so cooldowns and pool bars update live.
+# Durations: 500ms, 1s, 2s, ... Use 0 to disable live updates.
+refresh-interval: 1s
+
+# Item placed in every slot that has nothing else. Set "filler: false" to leave empty slots empty.
+filler:
+  enabled: true
+  material: GRAY_STAINED_GLASS_PANE
+  name: " "
+  # Hides the tooltip entirely, so hovering the glass shows nothing.
+  hide-tooltip: true
+
+# Sounds (namespaced keys). Each may be a key string, a section with sound/volume/pitch, or "" to disable.
+sounds:
+  open:
+    sound: minecraft:block.ender_chest.open
+    volume: 0.5
+    pitch: 1.4
+  # Clicking an available world or a button.
+  click:
+    sound: minecraft:ui.button.click
+    volume: 0.6
+    pitch: 1.2
+  # Clicking a world that is locked or on cooldown.
+  denied:
+    sound: minecraft:block.note_block.bass
+    volume: 0.8
+    pitch: 0.6
+
+# Texts used by placeholders.
+text:
+  # <status>
+  status-ready: "<green>▶ Click to teleport!"
+  status-cooldown: "<gold>⌛ On cooldown"
+  status-locked: "<red>✖ Locked"
+  # <cooldown> when no cooldown is running.
+  cooldown-ready: "<green>Ready"
+  # <cooldown_length> when the player gets no cooldown.
+  no-cooldown: "<green>None"
+  # <cost> when the teleport is free (or the player has swiftrtp.bypass.cost).
+  # Non-free costs are built from messages.yml teleport.cost-money / cost-xp / cost-item / cost-separator.
+  cost-free: "<green>Free"
+  # <pool_bar>: a bar showing how full the world's ready-location pool is.
+  pool-bar:
+    length: 10
+    symbol: "▌"
+    # MiniMessage colour names or hex codes (#22c55e).
+    filled-color: "#22c55e"
+    empty-color: dark_gray
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  World buttons, keyed by the exact world name. Clicking one closes the menu and random-teleports the player there
+#  (normal permission, cooldown, cost and warmup rules apply; the teleport sends its own messages).
+#
+#  Keys per world:
+#    slot                  0-based slot (0 = top-left), or "row:column" (1-based, "2:5" = slot 13), or "auto"
+#                          (auto-placed worlds are centred in the middle row).
+#    material              item material (GRASS_BLOCK, minecraft:netherrack, ...)
+#    name                  MiniMessage display name
+#    lore                  list of MiniMessage lines ("" = blank line)
+#    glow                  enchantment glint (true/false)
+#    custom-model-data     number for resource packs (0 = none)
+#    item-model            namespaced item model for resource packs (e.g. mypack:rtp/overworld), "" = default
+#    hide-tooltip          hide the tooltip entirely
+#    amount                stack size (1-99)
+#    hide-if-no-permission hide the button when the player lacks the world's permission (instead of "locked")
+#    hide-if-unavailable   hide the button when the world isn't loaded or RTP isn't enabled there (default true)
+#    locked:               item variant when the player lacks permission (and on cooldown, unless "cooldown" is set).
+#                          Any key not set here is taken from the world entry above.
+#    cooldown:             optional item variant while the player is on cooldown.
+#
+#  Placeholders in name/lore:
+#    <world>            world name                       <player>          viewer's name
+#    <status>           ready / cooldown / locked text   <cooldown>        remaining cooldown, or text.cooldown-ready
+#    <cooldown_length>  cooldown after a teleport        <warmup>          warmup duration
+#    <cost>             cost, or text.cost-free           <radius>          max search radius (blocks)
+#    <min_radius>       min search radius (blocks)       <pool_size>       ready locations right now
+#    <pool_target>      configured pool size             <pool_percent>    pool fill, 0-100
+#    <pool_bar>         pool fill bar (text.pool-bar)
+# ----------------------------------------------------------------------------------------------------------------------
+items:
+  world:
+    slot: 11
+    material: GRASS_BLOCK
+    name: "<gradient:#4ade80:#16a34a><bold>Overworld</bold></gradient>"
+    lore:
+      - "<gray>Fields, forests and oceans —"
+      - "<gray>find your own corner of the world."
+      - ""
+      - "<dark_gray>▪ <gray>Radius: <white><radius></white> blocks"
+      - "<dark_gray>▪ <gray>Cost: <cost>"
+      - "<dark_gray>▪ <gray>Cooldown: <white><cooldown>"
+      - "<dark_gray>▪ <gray>Ready spots: <pool_bar> <white><pool_size></white><dark_gray>/</dark_gray><gray><pool_target>"
+      - ""
+      - "<status>"
+    glow: false
+    custom-model-data: 0
+    item-model: ""
+    hide-if-no-permission: false
+    locked:
+      material: GRAY_DYE
+      name: "<gray><bold>Overworld</bold>"
+
+  world_nether:
+    slot: 13
+    material: NETHERRACK
+    name: "<gradient:#f87171:#b91c1c><bold>The Nether</bold></gradient>"
+    lore:
+      - "<gray>Hot, dangerous and full of"
+      - "<gray>treasure. Bring fire resistance!"
+      - ""
+      - "<dark_gray>▪ <gray>Radius: <white><radius></white> blocks"
+      - "<dark_gray>▪ <gray>Cost: <cost>"
+      - "<dark_gray>▪ <gray>Cooldown: <white><cooldown>"
+      - "<dark_gray>▪ <gray>Ready spots: <pool_bar> <white><pool_size></white><dark_gray>/</dark_gray><gray><pool_target>"
+      - ""
+      - "<status>"
+    glow: false
+    hide-if-no-permission: false
+    locked:
+      material: GRAY_DYE
+      name: "<gray><bold>The Nether</bold>"
+
+  world_the_end:
+    slot: 15
+    material: END_STONE
+    name: "<gradient:#e9d5ff:#a855f7><bold>The End</bold></gradient>"
+    lore:
+      - "<gray>Floating islands in the void."
+      - "<gray>Watch your step."
+      - ""
+      - "<dark_gray>▪ <gray>Radius: <white><radius></white> blocks"
+      - "<dark_gray>▪ <gray>Cost: <cost>"
+      - "<dark_gray>▪ <gray>Cooldown: <white><cooldown>"
+      - "<dark_gray>▪ <gray>Ready spots: <pool_bar> <white><pool_size></white><dark_gray>/</dark_gray><gray><pool_target>"
+      - ""
+      - "<status>"
+    glow: true
+    hide-if-no-permission: false
+    locked:
+      material: GRAY_DYE
+      name: "<gray><bold>The End</bold>"
+      glow: false
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  Extra static buttons, keyed by any id. Keys: slot (or "slots: [..]" for several), the item keys above, and
+#  "action" (one) or "actions" (list, run in order):
+#    close             close the menu
+#    rtp               random-teleport like a bare /rtp (redirects / default world apply)
+#    rtp:<world>       random-teleport into a world
+#    command:<cmd>     run a command as the player (no slash needed)
+#    console:<cmd>     run a command as the console
+#  Commands may use {player}, {uuid} and {world}. Placeholders in name/lore: <player>
+# ----------------------------------------------------------------------------------------------------------------------
+buttons:
+  close:
+    slot: 22
+    material: BARRIER
+    name: "<red><bold>Close</bold>"
+    lore:
+      - "<gray>Click to close this menu."
+    action: close

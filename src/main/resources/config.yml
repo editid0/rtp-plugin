@@ -1,0 +1,407 @@
+# ======================================================================================================================
+#   SwiftRTP — instant random teleport for Paper & Folia
+# ======================================================================================================================
+#
+#   How it works: for every RTP-enabled world SwiftRTP keeps a POOL of safe destinations that were found, generated
+#   and kept loaded in the background. /rtp just picks one, so teleports are instant — no lag spike, no waiting for
+#   terrain to generate. When a pool runs low it is refilled quietly within the limits under "performance".
+#
+#   Layout of this file
+#     1. general           — debug, default world, redirects, command aliases
+#     2. performance       — how hard background work may push the server
+#     3. storage           — what survives a restart
+#     4. triggers          — automatic RTP on first join / respawn, and [RTP] signs
+#     5. worlds            — "defaults" (the full template) + per-world overrides
+#
+#   Value formats
+#     durations   "500ms", "30s", "5m", "1h30m", "2d", "1w"; a plain number means seconds;
+#                 0 / "0" / "none" / "never" means no time at all (feature off).
+#     blocks      material names, case-insensitive, "minecraft:" optional: lava, MAGMA_BLOCK, minecraft:cactus
+#                 "#tag" adds every block of a block tag: "#minecraft:leaves", "#fire"
+#                 "!entry" removes an entry added earlier in the same list: "!oak_leaves", "!#minecraft:ice"
+#     biomes      keys like plains / minecraft:plains, or globs: "*ocean*", "minecraft:*_river"
+#                 (a glob without a namespace matches every namespace, incl. datapack/modded biomes)
+#     sounds etc. namespaced keys: minecraft:entity.enderman.teleport, minecraft:portal, minecraft:slow_falling
+#     enums       case-insensitive, "-" and "_" are interchangeable: world-spawn == WORLD_SPAWN
+#
+#   Problems are reported in the console with the exact path (e.g. "worlds.world.area.max-radius") and a safe value is
+#   used instead. Only a YAML syntax error stops the plugin (or, on /rtp admin reload, keeps the previous config).
+#
+#   New options added by plugin updates are written into this file automatically (your values and comments are kept,
+#   the previous file is backed up as config.yml.bak-<n>).
+# ======================================================================================================================
+
+# Schema version of this file. Do not change it — SwiftRTP uses it to upgrade the file automatically.
+config-version: 1
+
+# Verbose logging of searches, pool refills and chunk loading. Useful for troubleshooting; noisy otherwise.
+debug: false
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  1. General
+# ----------------------------------------------------------------------------------------------------------------------
+
+# World used by a plain "/rtp" when the player's current world is not RTP-enabled (e.g. a lobby or spawn world).
+# "" = only ever teleport within the player's current world.
+default-world: "world"
+
+# Send /rtp from one world to another: "from-world: target-world".
+# Example — /rtp typed in the nether sends you to a random spot in the overworld:
+#   world_nether: world
+world-redirects: {}
+
+# Extra command names for /rtp (and /swiftrtp). Changing these requires a server restart.
+command-aliases:
+  - wild
+  - randomtp
+  - wilderness
+
+# Apply worlds.defaults to every world that is NOT listed under "worlds" below.
+# false (recommended) = only the worlds listed below are RTP-enabled. Each enabled world gets a pool that generates
+# terrain in the background, so turning this on for servers with many plugin/minigame worlds wastes resources.
+enable-unlisted-worlds: false
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  2. Performance — limits for BACKGROUND work (pool filling and pre-generation). A player's own /rtp is never delayed
+#     by these limits.
+# ----------------------------------------------------------------------------------------------------------------------
+performance:
+  # Chunk loads/generations that may be in flight at the same time.
+  # Generation is done off-thread by Paper; 2-8 is a good range. Raise on strong hardware, lower on weak hosts.
+  max-concurrent-chunk-loads: 4
+  # Upper bound on chunk loads started per second (token bucket).
+  max-chunk-loads-per-second: 20
+  # Pause background work while the average tick time (MSPT) is above this. 50 = the server is already lagging.
+  # 0 = never pause.
+  pause-above-mspt: 45.0
+  # Pause background work while nobody is online. false keeps pools topped up so the first player is served instantly
+  # (pools are saved on shutdown anyway, see storage.persist-pools).
+  pause-when-empty: false
+  # Wait this long after the server started before filling pools (lets the server settle first).
+  startup-delay: 10s
+  # How often pools are checked for missing/expired entries. Minimum 250ms.
+  refill-check-interval: 5s
+  # Background searches running in parallel per world.
+  max-searches-per-world: 2
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  3. Storage
+# ----------------------------------------------------------------------------------------------------------------------
+storage:
+  # Save pooled locations on shutdown and reuse them after a restart (each one is re-checked before use).
+  persist-pools: true
+  # Keep players' cooldowns across restarts.
+  persist-cooldowns: true
+  # How often pools/cooldowns are saved while running (on top of saving at shutdown). 0 = only at shutdown.
+  autosave-interval: 5m
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  4. Triggers — automatic random teleports and [RTP] signs. Automatic teleports skip warmup, cooldown and cost.
+# ----------------------------------------------------------------------------------------------------------------------
+triggers:
+  first-join:
+    # Random-teleport players the very first time they join the server.
+    enabled: false
+    # World to send them to. "" = default-world (or the world they spawned in).
+    world: ""
+    # Delay after joining (lets the client finish loading).
+    delay: 1s
+  respawn:
+    # Random-teleport players when they respawn after death.
+    enabled: false
+    # World to send them to. "" = the world they respawn in.
+    world: ""
+    # Only when the player has no bed / respawn anchor to return to.
+    only-without-bed: true
+  signs:
+    # Allow [RTP] signs: write the header on the first line and (optionally) a world name on the second line.
+    enabled: true
+    # First line that turns a sign into an RTP sign (case-insensitive).
+    header: "[RTP]"
+    # Permission needed to create RTP signs (using them needs swiftrtp.sign.use).
+    create-permission: "swiftrtp.sign.create"
+
+# ----------------------------------------------------------------------------------------------------------------------
+#  5. Worlds
+#
+#   "defaults" is the complete template. Every world section below it only lists what differs: it is deep-merged over
+#   the defaults (sections merge key by key; single values and lists replace the default entirely — so an
+#   "unsafe-floor" list in a world section REPLACES the default list rather than adding to it).
+#   cooldown.tiers is replaced as a whole too, so a world can remove tiers.
+#
+#   A world listed here that doesn't exist (yet) is fine — its settings are used once it is loaded.
+#   To RTP-enable a world with pure defaults write:   my_world: {}
+# ----------------------------------------------------------------------------------------------------------------------
+worlds:
+  defaults:
+    # Set to false to switch RTP off for a world without deleting its section.
+    enabled: true
+    # Permission needed to RTP into the world. "" = everyone with swiftrtp.use. {world} is replaced by the world name,
+    # e.g. "swiftrtp.world.{world}" (swiftrtp.world.* grants all of them).
+    permission: ""
+
+    # ---- area: where on the map destinations may be picked ---------------------------------------------------------
+    area:
+      center:
+        # world_spawn  = the world's spawn point
+        # fixed        = the x / z below
+        # world_border = the centre of the world border
+        mode: world_spawn
+        x: 0
+        z: 0
+      # circle = uniformly spread over a ring; square = uniformly over a square ring.
+      shape: circle
+      # Distance from the centre in blocks. Destinations lie between min-radius and max-radius.
+      # min-radius keeps players out of the (often built-up / griefed) spawn area.
+      min-radius: 500
+      max-radius: 5000
+      # Never pick spots outside the world border (the radius is clamped to it).
+      respect-world-border: true
+      # Blocks to stay away from the border edge.
+      border-padding: 16
+
+    # ---- search: how a random column becomes a safe place to stand ------------------------------------------------
+    search:
+      # auto    = surface for normal worlds, cave for the nether, end for the end
+      # surface = highest block with open sky above
+      # cave    = scan down from max-y for an enclosed air pocket with a solid floor (nether-style)
+      # end     = surface search that rejects the void (end islands)
+      mode: auto
+      # Lowest / highest Y a player may be placed at. "auto" = the world's build limits.
+      min-y: auto
+      max-y: auto
+      # Random columns tried per search before giving up. Background searches simply try again later; a live /rtp with
+      # an empty pool reports "no location" after this many attempts.
+      max-attempts: 32
+      # surface mode: the spot must see the sky (no landing inside caves, under overhangs or in buildings).
+      require-sky-access: true
+      # Never place players on or in water / lava.
+      avoid-liquids: true
+      # Blocks a player may never stand on.
+      # Leaves are included so players land on the ground rather than on top of trees; remove "#minecraft:leaves" if you
+      # don't mind tree-top landings (it makes searches in dense forests and jungles a little cheaper).
+      unsafe-floor:
+        - lava
+        - water
+        - magma_block
+        - cactus
+        - campfire
+        - soul_campfire
+        - fire
+        - soul_fire
+        - powder_snow
+        - sweet_berry_bush
+        - wither_rose
+        - pointed_dripstone
+        - bubble_column
+        - cobweb
+        - seagrass
+        - tall_seagrass
+        - kelp
+        - kelp_plant
+        - nether_portal
+        - end_portal
+        - end_gateway
+        - "#minecraft:leaves"
+      # Blocks that may not be in the two blocks the player occupies, nor right next to them.
+      unsafe-nearby:
+        - lava
+        - fire
+        - soul_fire
+        - campfire
+        - soul_campfire
+        - magma_block
+        - cactus
+        - sweet_berry_bush
+        - wither_rose
+        - powder_snow
+        - pointed_dripstone
+        - cobweb
+        - bubble_column
+        - nether_portal
+        - end_portal
+        - end_gateway
+      # any              = any chunk
+      # generated_only   = only chunks that already exist (never generates terrain; cheapest, but repeats areas)
+      # ungenerated_only = only never-visited chunks (fresh, untouched terrain; generates new chunks)
+      chunk-preference: any
+      biomes:
+        # blacklist = never land in these biomes; whitelist = only land in these biomes.
+        mode: blacklist
+        # Oceans and rivers are excluded so players don't land in water.
+        list:
+          - "*ocean*"
+          - "*river*"
+      # Skip spots inside protected regions/claims (WorldGuard, GriefPrevention, ... when installed).
+      avoid-claims: true
+      # Skip spots within this many blocks of any online player in the world. 0 = off.
+      min-distance-from-players: 0
+
+    # ---- pool: ready-to-use destinations kept per world -------------------------------------------------------------
+    pool:
+      # Disable to search live on every /rtp (slower, but no background work for this world).
+      enabled: true
+      # How many ready destinations to keep (0-500). Size it to how many /rtp's you expect per refill period.
+      size: 10
+      # Chunk radius kept loaded around each pooled spot (0 = only its own chunk, 1 = 3x3 chunks, 2 = 5x5 ...).
+      # Loaded chunks cost memory and tick time: size x (2r+1)² chunks per world.
+      keep-loaded-radius: 1
+      # Chunk radius generated around each pooled spot (then allowed to unload). Must be >= keep-loaded-radius.
+      # Generating a bit more than the client sees first makes arrival seamless.
+      pregen-radius: 3
+      # Replace pooled spots older than this (things change: players build, mobs spawn). 0 = never.
+      expire-after: 30m
+      # Minimum distance in blocks between two pooled spots, so players arriving close together are spread out.
+      min-spacing: 256
+
+    # ---- teleport: warmup, protection and effects -------------------------------------------------------------------
+    teleport:
+      # Time the player has to wait (standing still) before the teleport. 0 = instant.
+      # Bypass with swiftrtp.bypass.warmup.
+      warmup: 3s
+      # Cancel the warmup when the player moves...
+      cancel-on-move: true
+      # ...more than this many blocks (horizontally) from where they started. Jumping in place is always allowed;
+      # vertical drift beyond max(move-tolerance, 1.5) blocks also cancels.
+      move-tolerance: 0.5
+      # Cancel the warmup when the player takes damage.
+      cancel-on-damage: true
+      # Full damage immunity after arriving. 0 = off.
+      invulnerability: 3s
+      # Cancel the first fall damage taken within this time after arriving. 0 = off.
+      fall-damage-protection: 10s
+      effects:
+        # Title/subtitle on arrival (messages.yml: teleport.title / teleport.subtitle).
+        arrival-title: true
+        # Countdown in the action bar during warmup (messages.yml: teleport.warmup-actionbar).
+        action-bar-countdown: true
+        # Boss bar countdown during warmup (messages.yml: teleport.warmup-bossbar).
+        boss-bar-countdown: false
+        # Sounds: a key, or a section with sound / volume (0-10) / pitch (0.5-2). "" = no sound.
+        warmup-tick-sound:
+          sound: minecraft:block.note_block.hat
+          volume: 0.6
+          pitch: 1.4
+        teleport-sound:
+          sound: minecraft:entity.enderman.teleport
+          volume: 1.0
+          pitch: 1.0
+        # Particles: a key, or a section with particle / count (0-1000) / spread (blocks, 0-16). "" = none.
+        warmup-particles:
+          particle: minecraft:portal
+          count: 20
+          spread: 0.6
+        arrival-particles:
+          particle: minecraft:reverse_portal
+          count: 40
+          spread: 0.8
+        # Potion effects applied on arrival. Each entry is an effect key, or a section:
+        #   - effect: minecraft:slow_falling
+        #     duration: 5s
+        #     amplifier: 0        # 0 = level I
+        #     ambient: false
+        #     particles: true
+        #     icon: true
+        potion-effects: []
+      # Commands run after a successful teleport. Prefix with "console:", "player:" (run as the player) or "op:".
+      # Placeholders: {player} {uuid} {world} {x} {y} {z}
+      # Example:  - "console: broadcast {player} went exploring in {world}!"
+      commands: []
+      # If the chosen spot became unsafe at the last moment, how many other spots to try before failing.
+      max-retries: 3
+
+    # ---- cooldown ---------------------------------------------------------------------------------------------------
+    cooldown:
+      # Time between two /rtp's. 0 = no cooldown. Bypass with swiftrtp.bypass.cooldown.
+      base: 5m
+      # Shorter cooldowns for players with the permission swiftrtp.cooldown.<tier>. The shortest one that applies wins.
+      tiers:
+        vip: 2m
+        mvp: 30s
+      # true = a separate cooldown per world; false = one cooldown shared by all worlds.
+      per-world: false
+
+    # ---- cost (bypass with swiftrtp.bypass.cost) --------------------------------------------------------------------
+    cost:
+      # Money taken via Vault (needs an economy plugin). 0 = free.
+      money: 0
+      # Experience levels taken. 0 = free.
+      xp-levels: 0
+      # Items taken from the inventory: "material:amount" or a section with material / amount.
+      # Example:  - "ender_pearl:1"
+      items: []
+      # Give everything back if the teleport fails after the player paid.
+      refund-on-failure: true
+
+  # ====================================================================================================================
+  #  Per-world overrides — list only what differs from "defaults".
+  # ====================================================================================================================
+
+  # The overworld: pure defaults.
+  world: {}
+
+  # The nether: no sky, so search caves below the bedrock roof and above the lava sea.
+  world_nether:
+    area:
+      min-radius: 100
+      # Nether distances count 8x in the overworld; 2000 here ≈ 16000 there.
+      max-radius: 2000
+    search:
+      mode: cave
+      # Lava sea is at y 31; the bedrock roof starts at 123.
+      min-y: 32
+      max-y: 120
+      # Cave spots take more tries to find.
+      max-attempts: 48
+      require-sky-access: false
+      unsafe-floor:
+        - lava
+        - magma_block
+        - fire
+        - soul_fire
+        - campfire
+        - soul_campfire
+        - wither_rose
+        - pointed_dripstone
+        - cobweb
+        - nether_portal
+        - bedrock
+      unsafe-nearby:
+        - lava
+        - fire
+        - soul_fire
+        - campfire
+        - soul_campfire
+        - magma_block
+        - wither_rose
+        - pointed_dripstone
+        - cobweb
+        - nether_portal
+      biomes:
+        # No oceans or rivers in the nether: allow every biome.
+        list: []
+    pool:
+      size: 5
+
+  # The end: skip the main island (dragon fight) and land on the outer islands.
+  world_the_end:
+    area:
+      center:
+        mode: fixed
+        x: 0
+        z: 0
+      # The outer islands begin about 1000 blocks from the centre.
+      min-radius: 1000
+      max-radius: 5000
+    search:
+      mode: end
+      # The end has big gaps between islands; allow more tries.
+      max-attempts: 64
+      biomes:
+        mode: blacklist
+        # minecraft:the_end is the main island; small_end_islands are tiny floating specks.
+        list:
+          - the_end
+          - small_end_islands
+    pool:
+      size: 5

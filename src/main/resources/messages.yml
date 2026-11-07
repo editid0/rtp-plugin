@@ -1,0 +1,154 @@
+# ======================================================================================================================
+#  SwiftRTP messages — MiniMessage format: https://docs.advntr.dev/minimessage/format
+#  <prefix> is available in every message. Set a message to "" to disable it.
+#  Placeholders are listed above each message. Multi-line messages use YAML block scalars (|).
+# ======================================================================================================================
+
+prefix: "<gradient:#38bdf8:#6366f1><bold>SwiftRTP</bold></gradient> <dark_gray>»</dark_gray> "
+
+# ---- shared ----------------------------------------------------------------------------------------------------------
+general:
+  no-permission: "<prefix><red>You don't have permission to do that."
+  player-only: "<prefix><red>Only players can use this command."
+  # <player>
+  player-not-found: "<prefix><red>Player <white><player></white> is not online."
+  # <world>
+  world-not-found: "<prefix><red>World <white><world></white> does not exist."
+  # <world>
+  world-disabled: "<prefix><red>Random teleport is not enabled in <white><world></white>."
+  no-world-available: "<prefix><red>There is no world you can random-teleport to from here."
+  reloaded: "<prefix><green>Configuration reloaded."
+  # <error>
+  reload-failed: "<prefix><red>Reload failed: <white><error></white> <gray>(previous configuration kept)"
+
+# ---- teleport flow (teleport agent) ------------------------------------------------------------------------------------
+teleport:
+  # <seconds>, <world>
+  warmup: "<prefix><gray>Teleporting to <white><world></white> in <white><seconds>s</white>. Don't move!"
+  # <seconds>, <world>
+  warmup-actionbar: "<gray>Teleporting in <white><bold><seconds></bold></white>..."
+  # <seconds>, <world>
+  warmup-bossbar: "<white>Teleporting to <world> in <seconds>s"
+  # Shown when no pre-generated location was ready and a live search is needed. <world>
+  searching: "<prefix><gray>Finding a safe spot in <white><world></white>..."
+  # <world>, <x>, <y>, <z>, <biome>
+  success: "<prefix><green>Teleported to <white><x></white>, <white><y></white>, <white><z></white> in <white><world></white>."
+  # <world>, <x>, <y>, <z>, <biome>
+  title: "<gradient:#38bdf8:#6366f1><bold>Whoosh!</bold></gradient>"
+  subtitle: "<gray><x>, <y>, <z> <dark_gray>·</dark_gray> <biome>"
+  # <time>, <world>
+  cooldown: "<prefix><red>You must wait <white><time></white> before teleporting again."
+  already-pending: "<prefix><red>You already have a teleport in progress."
+  cancelled-move: "<prefix><red>Teleport cancelled because you moved."
+  cancelled-damage: "<prefix><red>Teleport cancelled because you took damage."
+  cancelled: "<prefix><red>Teleport cancelled."
+  nothing-to-cancel: "<prefix><gray>You have no pending teleport."
+  # <world>
+  no-location: "<prefix><red>Couldn't find a safe location in <white><world></white>. Please try again."
+  failed: "<prefix><red>The teleport failed. Please try again."
+  # <cost>
+  insufficient-funds: "<prefix><red>You need <white><cost></white> to random-teleport."
+  # <cost>
+  charged: "<prefix><gray>Paid <white><cost></white>."
+  # <cost>
+  refunded: "<prefix><gray>Refunded <white><cost></white>."
+  # Cost fragments joined with cost-separator to build <cost>. <amount>, <item>
+  cost-money: "<amount>"
+  cost-xp: "<amount> XP level(s)"
+  cost-item: "<amount>x <item>"
+  cost-separator: "<gray>, </gray>"
+  # Feedback to the sender of /rtp <world> <player>. <player>, <world>, <x>, <y>, <z>, <reason>
+  sent-other: "<prefix><gray>Sending <white><player></white> to a random location in <white><world></white>..."
+  sent-other-done: "<prefix><green><white><player></white> was teleported to <white><x></white>, <white><y></white>, <white><z></white> in <white><world></white>."
+  sent-other-failed: "<prefix><red>Could not teleport <white><player></white>: <reason>"
+  # Short failure reasons used as <reason> in sent-other-failed (one per outcome).
+  reason:
+    no-permission: "they lack permission for that world"
+    world-not-found: "no usable world"
+    world-disabled: "random teleport is disabled in that world"
+    on-cooldown: "they are on cooldown"
+    insufficient-funds: "they cannot afford it"
+    already-pending: "they already have a teleport in progress"
+    cancelled-move: "they moved during the warmup"
+    cancelled-damage: "they took damage during the warmup"
+    cancelled-event: "another plugin cancelled it"
+    cancelled-other: "it was cancelled"
+    no-location-found: "no safe location was found"
+    teleport-failed: "the teleport failed"
+    success: "success"
+
+# ---- commands (commands agent) -----------------------------------------------------------------------------------------
+command:
+  help: |-
+    <gradient:#38bdf8:#6366f1><bold>SwiftRTP</bold></gradient> <dark_gray>— <gray>random teleport
+    <white>/rtp <gray>— teleport to a random location
+    <white>/rtp <world> <gray>— teleport to a random location in a world
+    <white>/rtp gui <gray>— open the world menu
+    <white>/rtp cancel <gray>— cancel a pending teleport
+  help-admin: |-
+    <white>/rtp <world> <player> <gray>— send a player
+    <white>/rtp admin reload <gray>— reload configuration
+    <white>/rtp admin info <gray>— plugin status
+    <white>/rtp admin pool [world] <gray>— pool status
+    <white>/rtp admin pool clear|refill <world> <gray>— manage a pool
+    <white>/rtp admin cooldown reset <player> [world] <gray>— reset cooldowns
+  gui-disabled: "<prefix><red>The RTP menu is disabled."
+
+# ---- admin (commands agent) --------------------------------------------------------------------------------------------
+admin:
+  pool-header: "<prefix><gray>Location pools:"
+  # <world>, <bar>, <size>, <target>, <searching>, <found>, <served>, <failed>, <expired>, <avg_ms>, <avg_attempts>, <chunks>, <status>
+  pool-line: " <white><world></white> <bar> <white><size></white><gray>/<target></gray> <dark_gray>|</dark_gray> <gray>found <white><found></white> served <white><served></white> avg <white><avg_ms>ms</white> (<avg_attempts> tries) chunks <white><chunks></white></gray> <status>"
+  pool-status-ok: "<green>●"
+  pool-status-filling: "<yellow>● filling"
+  # <reason>
+  pool-status-paused: "<red>● paused (<reason>)"
+  pool-status-disabled: "<dark_gray>● disabled"
+  pool-empty-list: "<prefix><gray>No RTP-enabled worlds are loaded."
+  # <world>
+  pool-cleared: "<prefix><green>Cleared the pool for <white><world></white>; refilling."
+  # <world>
+  pool-refilling: "<prefix><green>Refilling the pool for <white><world></white>."
+  # <player>, <world> (world is "all worlds" when omitted)
+  cooldown-reset: "<prefix><green>Reset RTP cooldowns of <white><player></white> in <white><world></white>."
+  all-worlds: "all worlds"
+  # Used in admin.info when there are no hooks / worlds.
+  none: "none"
+  # <paused> in admin.info. <reason>
+  info-paused: "<red>(paused: <reason>)"
+  info-running: "<green>(running)"
+  # <version>, <platform>, <hooks>, <worlds>, <inflight>, <queued>, <loaded>, <paused>
+  info: |-
+    <prefix><white>SwiftRTP <version> <gray>on <white><platform>
+    <gray> Hooks: <white><hooks>
+    <gray> Worlds: <white><worlds>
+    <gray> Chunk loader: <white><inflight></white> in flight, <white><queued></white> queued, <white><loaded></white> loaded total <paused>
+
+# ---- signs & triggers (commands agent) ---------------------------------------------------------------------------------
+sign:
+  created: "<prefix><green>RTP sign created."
+  # <world> ("" when the sign uses the player's current world)
+  line-1: "<dark_blue><bold>[RTP]"
+  line-2: "<black><world>"
+  line-3: "<gray>Click to"
+  line-4: "<gray>teleport!"
+  # <world>
+  invalid-world: "<prefix><red>World <white><world></white> is not RTP-enabled."
+  # <world> on sign lines when no world is written on the sign.
+  current-world: "<dark_gray>current world"
+trigger:
+  # <player>, <world>
+  first-join: ""
+  # <player>, <world>
+  respawn: ""
+
+# ---- duration formatting (config agent) -------------------------------------------------------------------------------
+# Used for <time> placeholders, e.g. 3725 seconds -> "1h 2m 5s". Zero parts are left out, anything under a second
+# shows as "1s", and "now" is used when no time is left. Plain text only (no MiniMessage tags).
+time:
+  days: "d"
+  hours: "h"
+  minutes: "m"
+  seconds: "s"
+  separator: " "
+  now: "now"

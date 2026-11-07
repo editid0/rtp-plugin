@@ -1,0 +1,56 @@
+name: SwiftRTP
+version: '${version}'
+main: io.github.editid0.swiftrtp.SwiftRTP
+api-version: '26.3'
+folia-supported: true
+description: Lag-free random teleport with pre-generated, pre-loaded destination pools.
+authors: [editid0]
+softdepend: [Vault, PlaceholderAPI, WorldGuard]
+
+permissions:
+  swiftrtp.use:
+    description: Use /rtp.
+    default: true
+  swiftrtp.gui:
+    description: Open the RTP world selector menu.
+    default: true
+  swiftrtp.world.*:
+    description: RTP into every world that requires a permission.
+    default: op
+  swiftrtp.others:
+    description: Random-teleport other players (/rtp <world> <player>).
+    default: op
+  swiftrtp.sign.use:
+    description: Use RTP signs.
+    default: true
+  swiftrtp.sign.create:
+    description: Create RTP signs.
+    default: op
+  swiftrtp.bypass.cooldown:
+    description: Ignore RTP cooldowns.
+    default: op
+  swiftrtp.bypass.cost:
+    description: Ignore RTP costs.
+    default: op
+  swiftrtp.bypass.warmup:
+    description: Teleport without warmup.
+    default: op
+  swiftrtp.admin:
+    description: /rtp admin (reload, pool, cooldown, info).
+    default: op
+    children:
+      swiftrtp.others: true
+  swiftrtp.*:
+    description: Everything.
+    default: false
+    children:
+      swiftrtp.use: true
+      swiftrtp.gui: true
+      swiftrtp.world.*: true
+      swiftrtp.others: true
+      swiftrtp.sign.use: true
+      swiftrtp.sign.create: true
+      swiftrtp.bypass.cooldown: true
+      swiftrtp.bypass.cost: true
+      swiftrtp.bypass.warmup: true
+      swiftrtp.admin: true
