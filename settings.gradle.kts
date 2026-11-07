@@ -1,1 +1,1 @@
-rootProject.name = "SwiftRTP"
+rootProject.name = "PrimedRTP"

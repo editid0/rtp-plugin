@@ -10,7 +10,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/") { content { includeGroup("me.clip") } }
     maven("https://maven.enginehub.org/repo/") { content { includeGroupByRegex("com\\.sk89q.*"); includeGroupByRegex("org\\.enginehub.*") } }
-    maven("https://jitpack.io") { content { includeGroup("com.github.MilkBowl") } }
+    maven("https://jitpack.io") { content { includeGroup("com.github.MilkBowl"); includeGroup("com.github.GriefPrevention") } }
 }
 
 dependencies {
@@ -23,6 +23,7 @@ dependencies {
     compileOnly("com.sk89q.worldguard:worldguard-core:7.0.21") { isTransitive = false }
     compileOnly("com.sk89q.worldedit:worldedit-core:7.4.6") { isTransitive = false }
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.4.6") { isTransitive = false }
+    compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.7") { isTransitive = false }
 
     testImplementation("io.papermc.paper:paper-api:26.3.build.244-stable")
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
@@ -48,5 +49,5 @@ tasks.processResources {
 }
 
 tasks.jar {
-    archiveFileName = "SwiftRTP-${project.version}.jar"
+    archiveFileName = "PrimedRTP-${project.version}.jar"
 }

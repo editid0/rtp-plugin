@@ -1,5 +1,5 @@
 # ======================================================================================================================
-#  SwiftRTP world-selector menu (/rtp gui)
+#  PrimedRTP world-selector menu (/rtp gui)
 #
 #  Text uses MiniMessage: https://docs.advntr.dev/minimessage/format
 #  Item names and lore are NOT italic unless you add <italic> yourself.
@@ -59,7 +59,7 @@ text:
   cooldown-ready: "<green>Ready"
   # <cooldown_length> when the player gets no cooldown.
   no-cooldown: "<green>None"
-  # <cost> when the teleport is free (or the player has swiftrtp.bypass.cost).
+  # <cost> when the teleport is free (or the player has primedrtp.bypass.cost).
   # Non-free costs are built from messages.yml teleport.cost-money / cost-xp / cost-item / cost-separator.
   cost-free: "<green>Free"
   # <pool_bar>: a bar showing how full the world's ready-location pool is.

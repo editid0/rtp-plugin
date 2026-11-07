@@ -1,56 +1,56 @@
-name: SwiftRTP
+name: PrimedRTP
 version: '${version}'
-main: io.github.editid0.swiftrtp.SwiftRTP
+main: io.github.editid0.primedrtp.PrimedRTP
 api-version: '26.3'
 folia-supported: true
 description: Lag-free random teleport with pre-generated, pre-loaded destination pools.
 authors: [editid0]
-softdepend: [Vault, PlaceholderAPI, WorldGuard]
+softdepend: [Vault, PlaceholderAPI, WorldGuard, GriefPrevention]
 
 permissions:
-  swiftrtp.use:
+  primedrtp.use:
     description: Use /rtp.
     default: true
-  swiftrtp.gui:
+  primedrtp.gui:
     description: Open the RTP world selector menu.
     default: true
-  swiftrtp.world.*:
+  primedrtp.world.*:
     description: RTP into every world that requires a permission.
     default: op
-  swiftrtp.others:
+  primedrtp.others:
     description: Random-teleport other players (/rtp <world> <player>).
     default: op
-  swiftrtp.sign.use:
+  primedrtp.sign.use:
     description: Use RTP signs.
     default: true
-  swiftrtp.sign.create:
+  primedrtp.sign.create:
     description: Create RTP signs.
     default: op
-  swiftrtp.bypass.cooldown:
+  primedrtp.bypass.cooldown:
     description: Ignore RTP cooldowns.
     default: op
-  swiftrtp.bypass.cost:
+  primedrtp.bypass.cost:
     description: Ignore RTP costs.
     default: op
-  swiftrtp.bypass.warmup:
+  primedrtp.bypass.warmup:
     description: Teleport without warmup.
     default: op
-  swiftrtp.admin:
+  primedrtp.admin:
     description: /rtp admin (reload, pool, cooldown, info).
     default: op
     children:
-      swiftrtp.others: true
-  swiftrtp.*:
+      primedrtp.others: true
+  primedrtp.*:
     description: Everything.
     default: false
     children:
-      swiftrtp.use: true
-      swiftrtp.gui: true
-      swiftrtp.world.*: true
-      swiftrtp.others: true
-      swiftrtp.sign.use: true
-      swiftrtp.sign.create: true
-      swiftrtp.bypass.cooldown: true
-      swiftrtp.bypass.cost: true
-      swiftrtp.bypass.warmup: true
-      swiftrtp.admin: true
+      primedrtp.use: true
+      primedrtp.gui: true
+      primedrtp.world.*: true
+      primedrtp.others: true
+      primedrtp.sign.use: true
+      primedrtp.sign.create: true
+      primedrtp.bypass.cooldown: true
+      primedrtp.bypass.cost: true
+      primedrtp.bypass.warmup: true
+      primedrtp.admin: true

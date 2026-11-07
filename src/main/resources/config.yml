@@ -1,8 +1,8 @@
 # ======================================================================================================================
-#   SwiftRTP — instant random teleport for Paper & Folia
+#   PrimedRTP — instant random teleport for Paper & Folia
 # ======================================================================================================================
 #
-#   How it works: for every RTP-enabled world SwiftRTP keeps a POOL of safe destinations that were found, generated
+#   How it works: for every RTP-enabled world PrimedRTP keeps a POOL of safe destinations that were found, generated
 #   and kept loaded in the background. /rtp just picks one, so teleports are instant — no lag spike, no waiting for
 #   terrain to generate. When a pool runs low it is refilled quietly within the limits under "performance".
 #
@@ -31,7 +31,7 @@
 #   the previous file is backed up as config.yml.bak-<n>).
 # ======================================================================================================================
 
-# Schema version of this file. Do not change it — SwiftRTP uses it to upgrade the file automatically.
+# Schema version of this file. Do not change it — PrimedRTP uses it to upgrade the file automatically.
 config-version: 1
 
 # Verbose logging of searches, pool refills and chunk loading. Useful for troubleshooting; noisy otherwise.
@@ -50,7 +50,7 @@ default-world: "world"
 #   world_nether: world
 world-redirects: {}
 
-# Extra command names for /rtp (and /swiftrtp). Changing these requires a server restart.
+# Extra command names for /rtp (and /primedrtp). Changing these requires a server restart.
 command-aliases:
   - wild
   - randomtp
@@ -118,8 +118,8 @@ triggers:
     enabled: true
     # First line that turns a sign into an RTP sign (case-insensitive).
     header: "[RTP]"
-    # Permission needed to create RTP signs (using them needs swiftrtp.sign.use).
-    create-permission: "swiftrtp.sign.create"
+    # Permission needed to create RTP signs (using them needs primedrtp.sign.use).
+    create-permission: "primedrtp.sign.create"
 
 # ----------------------------------------------------------------------------------------------------------------------
 #  5. Worlds
@@ -136,8 +136,8 @@ worlds:
   defaults:
     # Set to false to switch RTP off for a world without deleting its section.
     enabled: true
-    # Permission needed to RTP into the world. "" = everyone with swiftrtp.use. {world} is replaced by the world name,
-    # e.g. "swiftrtp.world.{world}" (swiftrtp.world.* grants all of them).
+    # Permission needed to RTP into the world. "" = everyone with primedrtp.use. {world} is replaced by the world name,
+    # e.g. "primedrtp.world.{world}" (primedrtp.world.* grants all of them).
     permission: ""
 
     # ---- area: where on the map destinations may be picked ---------------------------------------------------------
@@ -232,7 +232,7 @@ worlds:
         list:
           - "*ocean*"
           - "*river*"
-      # Skip spots inside protected regions/claims (WorldGuard, GriefPrevention, ... when installed).
+      # Skip spots inside WorldGuard regions and GriefPrevention claims (whichever are installed).
       avoid-claims: true
       # Skip spots within this many blocks of any online player in the world. 0 = off.
       min-distance-from-players: 0
@@ -257,7 +257,7 @@ worlds:
     # ---- teleport: warmup, protection and effects -------------------------------------------------------------------
     teleport:
       # Time the player has to wait (standing still) before the teleport. 0 = instant.
-      # Bypass with swiftrtp.bypass.warmup.
+      # Bypass with primedrtp.bypass.warmup.
       warmup: 3s
       # Cancel the warmup when the player moves...
       cancel-on-move: true
@@ -312,16 +312,16 @@ worlds:
 
     # ---- cooldown ---------------------------------------------------------------------------------------------------
     cooldown:
-      # Time between two /rtp's. 0 = no cooldown. Bypass with swiftrtp.bypass.cooldown.
+      # Time between two /rtp's. 0 = no cooldown. Bypass with primedrtp.bypass.cooldown.
       base: 5m
-      # Shorter cooldowns for players with the permission swiftrtp.cooldown.<tier>. The shortest one that applies wins.
+      # Shorter cooldowns for players with the permission primedrtp.cooldown.<tier>. The shortest one that applies wins.
       tiers:
         vip: 2m
         mvp: 30s
       # true = a separate cooldown per world; false = one cooldown shared by all worlds.
       per-world: false
 
-    # ---- cost (bypass with swiftrtp.bypass.cost) --------------------------------------------------------------------
+    # ---- cost (bypass with primedrtp.bypass.cost) --------------------------------------------------------------------
     cost:
       # Money taken via Vault (needs an economy plugin). 0 = free.
       money: 0
